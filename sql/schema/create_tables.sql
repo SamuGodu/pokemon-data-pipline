@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS fact_pokemon_type;
 DROP TABLE IF EXISTS dim_ability;
 DROP TABLE IF EXISTS dim_type;
 DROP TABLE IF EXISTS dim_pokemon;
-DROP TABLE IF EXISTS raw_api_response;
+DROP TABLE IF EXISTS raw_api_responses;
 
 
 -- Raw API response storage
@@ -23,7 +23,7 @@ CREATE TABLE raw_api_responses (
 -- Main Pokemon dimension table
 CREATE TABLE dim_pokemon (
     pokemon_id INTEGER PRIMARY KEY,
-    name VARCHAR(100) NOT NULL
+    name VARCHAR(100) NOT NULL,
     height INTEGER,
     weight INTEGER,
     base_experience INTEGER,
@@ -33,13 +33,13 @@ CREATE TABLE dim_pokemon (
 
 -- Pokemon type dimension table
 CREATE TABLE dim_type (
-    type_id INTEGER PRIMARY KEY
+    type_id INTEGER PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE
 );
 
 -- Pokemon abiklity dimension table
 CREATE TABLE dim_ability (
-    ability_id INTEGER PRIMARY KEY
+    ability_id INTEGER PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE
 );
 
@@ -47,17 +47,17 @@ CREATE TABLE dim_ability (
 CREATE TABLE fact_pokemon_type (
     pokemon_id INTEGER NOT NULL,
     type_id INTEGER NOT NULL,
-    slot INTEGER
+    slot INTEGER,
 
 PRIMARY KEY (pokemon_id, type_id),
 
 CONSTRAINT fk_pokemon_type_pokemon
     FOREIGN KEY (pokemon_id)
-    REFERENCES dim_pokmeon (pokemon_id),
+    REFERENCES dim_pokemon (pokemon_id),
     
 CONSTRAINT fk_pokemon_type_type
     FOREIGN KEY (type_id)
-    REFERENCES dim_table (type_id)
+    REFERENCES dim_type (type_id)
 );
 
 -- Many-to-many relationship between Pokemon and Ability
@@ -65,13 +65,13 @@ CREATE TABLE fact_pokemon_ability (
     pokemon_id INTEGER NOT NULL,
     ability_id INTEGER NOT NULL,
     is_hidden BOOLEAN,
-    slot INTEGER
+    slot INTEGER,
 
 PRIMARY KEY (pokemon_id, ability_id),
 
 CONSTRAINT fk_pokemon_ability_pokemon
     FOREIGN KEY (pokemon_id)
-    REFERENCES dim_pokmeon (pokemon_id),
+    REFERENCES dim_pokemon (pokemon_id),
     
 CONSTRAINT fk_pokemon_ability_ability
     FOREIGN KEY (ability_id)
