@@ -1,0 +1,10 @@
+- PostgreSQL runs from Docker
+- schema creates successfully
+- API extractor works
+- raw JSON is saved
+- raw data loads into PostgreSQL
+- final tables populate correctly
+- rerunning the pipeline does not duplicate rows
+- logs are generated
+- at least 5 SQL reports exist
+- README explains setup and architecture
