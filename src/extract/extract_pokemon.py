@@ -1,17 +1,19 @@
 import json
 import requests
 
-url = "https://pokeapi.co/api/v2/pokemon/ditto"
+for pokemon_id in range(1,10):
 
-response = requests.get(url)
+    url = f"https://pokeapi.co/api/v2/pokemon/{pokemon_id}"
 
-print(response.status_code)
+    response = requests.get(url)
 
-data = response.json()
+    print(response.status_code)
 
-print(data["name"])
+    data = response.json()
 
-with open("data/raw/pokemon_1.json", "w") as file:
-    json.dump(data, file, indent=4)
+    file_path = f"data/raw/pokemon_{pokemon_id}"
 
-print("Raw JSON saved.")
+    with open("data/raw/pokemon_1.json", "w") as file:
+        json.dump(data, file, indent=4)
+
+    print(f"Saved Pokemon {pokemon_id}")
