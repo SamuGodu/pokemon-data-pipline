@@ -1,7 +1,7 @@
 import json
 import requests
 
-for pokemon_id in range(1,10):
+for pokemon_id in range(1,26):
 
     url = f"https://pokeapi.co/api/v2/pokemon/{pokemon_id}"
 
@@ -12,7 +12,7 @@ for pokemon_id in range(1,10):
     else:
         print("Something failed")
         continue
-    
+
     data = response.json()
 
     file_path = f"data/raw/pokemon_{pokemon_id}.json"
