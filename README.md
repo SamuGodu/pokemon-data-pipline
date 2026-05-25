@@ -1,43 +1,75 @@
-````markdown
 # Pokémon Data Engineering Pipeline
 
-## Project Overview
+## Overview
 
-This project is an end-to-end Data Engineering pipeline built using Python, PostgreSQL, Docker, and the PokeAPI.
+This project is an end-to-end ETL pipeline built using Python, PostgreSQL, Docker, and the PokeAPI.
 
-The objective is to simulate a real-world ETL workflow by:
+The pipeline extracts Pokémon data from a public REST API, stores raw JSON responses, transforms nested API data into normalized relational tables, and loads the cleaned data into PostgreSQL for analytical querying.
 
-- extracting data from a public REST API
-- storing raw API responses
-- transforming nested JSON data into relational tables
-- loading clean data into PostgreSQL
-- preventing duplicate loads
-- handling failures and logging events
-- documenting the full pipeline professionally
+The objective of this project is to demonstrate practical Data Engineering fundamentals including:
 
-This project focuses on engineering fundamentals, maintainability, and operational thinking instead of unnecessary complexity.
+- API ingestion
+- ETL pipeline design
+- relational data modeling
+- Dockerized PostgreSQL environments
+- incremental loading
+- duplicate prevention
+- logging and operational debugging
+- modular Python project structure
+
+This project intentionally prioritizes engineering fundamentals, maintainability, and reliability over unnecessary complexity.
 
 ---
 
 # Architecture
 
 ```text
-PokeAPI
-   ↓
-Extract Layer (Python)
-   ↓
-Raw JSON Storage
-   ↓
-Transform Layer
-   ↓
-PostgreSQL
-   ↓
-SQL Analytics & Reporting
+                ┌─────────────┐
+                │   PokeAPI   │
+                └──────┬──────┘
+                       │
+                       ▼
+             ┌─────────────────┐
+             │ Extract Layer   │
+             │ Python Requests │
+             └────────┬────────┘
+                      │
+                      ▼
+            ┌──────────────────┐
+            │ Raw JSON Storage │
+            │  data/raw/*.json │
+            └────────┬─────────┘
+                     │
+                     ▼
+           ┌────────────────────┐
+           │ raw_api_responses  │
+           │ PostgreSQL Staging │
+           └────────┬───────────┘
+                    │
+                    ▼
+          ┌──────────────────────┐
+          │ Transformation Layer │
+          │ Normalize JSON Data  │
+          └────────┬─────────────┘
+                   │
+                   ▼
+      ┌─────────────────────────────┐
+      │ PostgreSQL Analytics Tables │
+      │ Dimensions + Fact Tables    │
+      └─────────────┬───────────────┘
+                    │
+                    ▼
+           ┌─────────────────┐
+           │ SQL Reporting   │
+           │ Analytics Layer │
+           └─────────────────┘
 ```
 
 ---
 
 # Tech Stack
+
+## Core Technologies
 
 - Python
 - PostgreSQL
@@ -46,13 +78,13 @@ SQL Analytics & Reporting
 - Git/GitHub
 - PokeAPI
 
-Libraries:
+## Python Libraries
 
 - requests
-- pandas
-- sqlalchemy
 - psycopg2-binary
 - python-dotenv
+- pandas
+- SQLAlchemy
 
 ---
 
@@ -65,18 +97,38 @@ pokemon-data-pipeline/
 │   ├── raw/
 │   └── processed/
 │
+├── docs/
+│   ├── schema_diagram.png
+│   ├── architecture.png
+│   └── reporting.md
+│
+├── logs/
+│   └── pipeline.log
+│
+├── notebooks/
+│   └── json_exploration.ipynb
+│
 ├── sql/
 │   ├── schema/
+│   │   └── create_tables.sql
+│   │
 │   └── queries/
+│       └── reporting_queries.sql
 │
 ├── src/
 │   ├── extract/
+│   │   └── extract_pokemon.py
+│   │
 │   ├── transform/
+│   │   └── transform_pokemon.py
+│   │
 │   ├── load/
-│   ├── utils/
-│   └── config/
+│   │   ├── load_raw_response.py
+│   │   └── load_clean_tables.py
+│   │
+│   └── utils/
+│       └── logger.py
 │
-├── logs/
 ├── tests/
 │
 ├── docker-compose.yml
@@ -90,69 +142,99 @@ pokemon-data-pipeline/
 
 # Data Source
 
-API Used:
+## API
 
-PokeAPI
+This project uses the public Pokémon REST API:
 
-Endpoints:
+:contentReference[oaicite:0]{index=0}
 
-- pokemon
-- pokemon-species
-- type
-- ability
+## Endpoints Used
 
-Website:
-
-https://pokeapi.co/
-
----
-
-# Main Features
-
-## API Extraction
-
-- API requests using Python
-- Pagination handling
-- Raw JSON response storage
-- Retry handling for failed requests
-
-## Transformation
-
-- JSON normalization
-- Data cleaning
-- Missing field handling
-- Duplicate prevention
-
-## Database Loading
-
-- PostgreSQL relational schema
-- Staging/raw tables
-- Final analytics tables
-- Incremental loading logic
-
-## Reliability
-
-- Logging system
-- Error handling
-- Graceful failure management
+- `/pokemon`
+- `/type`
+- `/ability`
+- `/pokemon-species`
 
 ---
 
 # Database Design
 
-Main tables:
+The project uses a dimensional warehouse-style schema.
 
-## Raw Layer
+## Raw/Staging Layer
 
-- raw_api_responses
+### `raw_api_responses`
 
-## Final Layer
+Stores raw API responses before transformation.
 
-- dim_pokemon
-- dim_type
-- dim_ability
-- fact_pokemon_type
-- fact_pokemon_ability
+Purpose:
+
+- debugging
+- replayability
+- raw data preservation
+- auditability
+
+---
+
+## Dimension Tables
+
+### `dim_pokemon`
+
+Stores Pokémon-level attributes.
+
+### `dim_type`
+
+Stores Pokémon types.
+
+### `dim_ability`
+
+Stores Pokémon abilities.
+
+---
+
+## Fact Tables
+
+### `fact_pokemon_type`
+
+Many-to-many relationship between Pokémon and types.
+
+### `fact_pokemon_ability`
+
+Many-to-many relationship between Pokémon and abilities.
+
+---
+
+# Features
+
+## API Extraction
+
+- REST API ingestion
+- dynamic endpoint requests
+- JSON response handling
+- local raw JSON storage
+- scalable extraction loops
+
+## Data Transformation
+
+- nested JSON normalization
+- dimension/fact table generation
+- relational modeling
+- reusable transformation functions
+
+## Database Loading
+
+- PostgreSQL loading
+- conflict handling
+- duplicate prevention
+- incremental loading logic
+- foreign key enforcement
+
+## Reliability & Operations
+
+- pipeline logging
+- error handling
+- operational debugging
+- modular ETL structure
 
 ---
 
@@ -166,17 +248,23 @@ This project uses Docker Compose to run PostgreSQL locally.
 docker-compose up -d
 ```
 
-## Stop Containers
+## Stop PostgreSQL
 
 ```bash
 docker-compose down
+```
+
+## Verify Running Containers
+
+```bash
+docker ps
 ```
 
 ---
 
 # Environment Variables
 
-Create a `.env` file based on `.env.example`.
+Create a `.env` file using `.env.example`.
 
 Example:
 
@@ -185,7 +273,7 @@ POSTGRES_USER=admin
 POSTGRES_PASSWORD=password
 POSTGRES_DB=pokemon_db
 POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
+POSTGRES_PORT=5433
 ```
 
 ---
@@ -207,7 +295,7 @@ python -m venv venv
 
 ## Activate Virtual Environment
 
-Windows:
+### Windows
 
 ```bash
 venv\Scripts\activate
@@ -223,52 +311,97 @@ pip install -r requirements.txt
 
 # Running the Pipeline
 
-## Run Extraction
+## 1. Extract Pokémon API Data
 
 ```bash
-python src/extract/extract_pokemon.py
+python -m src.extract.extract_pokemon
 ```
 
-## Run Transformations
+## 2. Load Raw API Responses
 
 ```bash
-python src/transform/transform_pokemon.py
+python -m src.load.load_raw_response
 ```
 
-## Run Database Load
+## 3. Transform and Load Clean Tables
 
 ```bash
-python src/load/load_pokemon.py
+python -m src.load.load_clean_tables
+```
+
+---
+
+# Logging
+
+Pipeline logs are stored in:
+
+```text
+logs/pipeline.log
+```
+
+The logging system tracks:
+
+- Pokémon loading progress
+- pipeline execution
+- failures and exceptions
+- operational debugging information
+
+Example:
+
+```text
+INFO - Loading Pokemon ID 25
+INFO - Clean tables loaded successfully
+ERROR - Failed processing Pokemon
 ```
 
 ---
 
 # SQL Analytics
 
-Example reporting queries:
+Example analytical queries include:
 
 - Pokémon count by type
 - Top 10 heaviest Pokémon
 - Most common abilities
 - Pokémon with multiple types
-- Average stats by type
+- Average height by type
+- Hidden ability analysis
+- Data quality validation checks
 
 ---
 
-# Logging
-
-Logs are stored in:
+# Example Pipeline Flow
 
 ```text
-logs/
+API Request
+    ↓
+Raw JSON File
+    ↓
+raw_api_responses
+    ↓
+Transformation Layer
+    ↓
+Dimension Tables
+    ↓
+Fact Tables
+    ↓
+Analytics Queries
 ```
 
-Examples:
+---
 
-- API request failures
-- malformed JSON
-- duplicate rows
-- database insertion errors
+# Challenges Encountered
+
+Key engineering challenges addressed during development:
+
+- handling nested API JSON structures
+- relational schema normalization
+- managing many-to-many relationships
+- preventing duplicate inserts
+- modularizing ETL logic
+- debugging import/package issues
+- Docker/PostgreSQL connectivity
+- logging and operational observability
 
 ---
 
@@ -276,42 +409,44 @@ Examples:
 
 Potential future enhancements:
 
-- Airflow orchestration
-- Automated scheduling
-- Unit testing expansion
-- Cloud deployment
-- CI/CD integration
-- Data validation framework
+- orchestration script (`run_pipeline.py`)
+- automated scheduling
+- Airflow integration
+- CI/CD pipeline
+- unit testing expansion
+- cloud deployment
+- data quality validation framework
+- retry/backoff API strategy
 
 ---
 
-# Challenges Encountered
+# Learning Outcomes
 
-- Handling nested JSON structures
-- Designing relational schemas
-- Managing duplicate prevention
-- Incremental loading logic
-- API reliability handling
+This project demonstrates practical experience with:
 
----
-
-# Learning Objectives
-
-This project demonstrates:
-
-- ETL fundamentals
-- API ingestion
-- PostgreSQL database design
-- Docker basics
-- Logging and reliability
-- SQL analytics
-- Modular Python structure
-- Git workflows
-- Operational debugging
+- ETL pipeline development
+- REST API ingestion
+- PostgreSQL relational modeling
+- dimensional warehouse design
+- Docker containerization
+- modular Python architecture
+- logging and observability
+- duplicate prevention strategies
+- Git/GitHub workflows
+- operational debugging
 
 ---
 
-# Status
+# Current Status
 
-Project currently in development.
-````
+Core ETL pipeline functionality is operational and currently supports:
+
+- API extraction
+- raw JSON storage
+- PostgreSQL staging layer
+- transformation layer
+- dimensional loading
+- fact table loading
+- logging
+- duplicate prevention
+- analytical SQL querying
