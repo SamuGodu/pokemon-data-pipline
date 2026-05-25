@@ -69,6 +69,22 @@ def load_dim_type(cursor, type_record):
     ))
 
 
+def load_dim_ability(cursor, ability_record):
+
+    cursor.execute("""
+        INSERT INTO dim_ability (
+            ability_id,
+            name
+        )
+        VALUES (%s, %s)
+
+        ON CONFLICT (ability_id) DO UPDATE SET
+            name = EXCLUDED.name;
+    """, (
+        ability_record["ability_id"],
+        ability_record["name"]
+    ))
+
 # =========================
 # GET RAW DATA
 # =========================
@@ -102,6 +118,11 @@ for row in rows:
     for type_record in transformed["dim_type"]:
 
         load_dim_type(cursor, type_record)
+    
+    # Load Ability dimension
+    for ability_record in transformed["dim_ability"]:
+
+        load_dim_ability(cursor, ability_record)
 
 
 # =========================
