@@ -3,6 +3,7 @@ import psycopg2
 from dotenv import load_dotenv
 
 from src.transform.transform_pokemon import transform_pokemon
+from src.utils.logger import logger
 
 # Load environment variables
 load_dotenv()
@@ -147,34 +148,33 @@ rows = cursor.fetchall()
 
 for row in rows:
 
-    data = row[0]
+    try:
 
-    transformed = transform_pokemon(data)
+        data = row[0]
 
-    # Load Pokemon dimension
-    pokemon = transformed["dim_pokemon"]
+        transformed = transform_pokemon(data)
 
-    load_dim_pokemon(cursor, pokemon)
+        pokemon = transformed["dim_pokemon"]
 
-    # Load Type dimension
-    for type_record in transformed["dim_type"]:
+        logger.info(f"Loading Pokemon ID {pokemon['pokemon_id']}")
 
-        load_dim_type(cursor, type_record)
-    
-    # Load Ability dimension
-    for ability_record in transformed["dim_ability"]:
+        load_dim_pokemon(cursor, pokemon)
 
-        load_dim_ability(cursor, ability_record)
+        for type_record in transformed["dim_type"]:
+            load_dim_type(cursor, type_record)
 
-    # Load fact_type
-    for type_link in transformed["fact_pokemon_type"]:
+        for ability_record in transformed["dim_ability"]:
+            load_dim_ability(cursor, ability_record)
 
-        load_fact_pokemon_type(cursor, type_link)
-        
-    # Load fact_ability
-    for ability_link in transformed["fact_pokemon_ability"]:
+        for type_link in transformed["fact_pokemon_type"]:
+            load_fact_pokemon_type(cursor, type_link)
 
-        load_fact_pokemon_ability(cursor, ability_link)
+        for ability_link in transformed["fact_pokemon_ability"]:
+            load_fact_pokemon_ability(cursor, ability_link)
+
+    except Exception as e:
+
+        logger.error(f"Failed processing Pokemon: {e}")
 
 # =========================
 # SAVE + CLOSE
@@ -186,4 +186,4 @@ cursor.close()
 
 conn.close()
 
-print("Clean tables loaded successfully.")
+logger.info("Clean tables loaded successfully.")
