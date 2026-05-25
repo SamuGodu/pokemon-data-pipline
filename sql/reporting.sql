@@ -40,3 +40,28 @@ SELECT name, ROUND(weight,2)
 FROM dim_pokemon
 ORDER BY ROUND(weight,2) desc
 LIMIT 10;
+
+-- Type distribution using window function
+SELECT 
+    t.name AS type_name,
+    COUNT(*) AS pokemon_count,
+    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS type_percentage
+FROM dim_pokemon p
+JOIN fact_pokemon_type ft
+    ON ft.pokemon_id = p.pokemon_id
+JOIN dim_type t
+    ON ft.type_id = t.type_id
+GROUP BY t.name;
+
+-- Data quality check: missing names, duplicate IDs
+SELECT *
+FROM dim_pokemon
+WHERE name IS NULL
+   OR name = '';
+
+SELECT
+    pokemon_id,
+    COUNT(*) AS duplicate_count
+FROM dim_pokemon
+GROUP BY pokemon_id
+HAVING COUNT(*) > 1;

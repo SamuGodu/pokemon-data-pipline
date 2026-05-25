@@ -1,7 +1,7 @@
 import json
 import requests
 
-for pokemon_id in range(1,26):
+for pokemon_id in range(1,61):
 
     url = f"https://pokeapi.co/api/v2/pokemon/{pokemon_id}"
 
