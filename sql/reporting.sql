@@ -5,7 +5,7 @@ JOIN fact_pokemon_type ft
 ON ft.pokemon_id = p.pokemon_id
     JOIN dim_type t
     ON ft.type_id = t.type_id
-GROUP BY t.name
+GROUP BY t.name;
 
 -- Average hieght and weight by type
 SELECT t.name, ROUND(AVG(p.weight),2) as Average_weight , ROUND(AVG(p.height),2) as Average_height
@@ -14,7 +14,7 @@ JOIN fact_pokemon_type ft
 ON ft.pokemon_id = p.pokemon_id
     JOIN dim_type t
     ON ft.type_id = t.type_id
-GROUP BY t.name
+GROUP BY t.name;
 
 -- Pokemon with multiple types
 SELECT p.name, COUNT(t.name)
@@ -25,4 +25,18 @@ ON ft.pokemon_id = p.pokemon_id
     ON ft.type_id = t.type_id
 GROUP BY p.name
 HAVING count(t.name) > 1
-ORDER BY p.name
+ORDER BY p.name;
+
+-- Most common abilities
+SELECT a.name, COUNT(*)
+FROM dim_ability a
+JOIN fact_pokemon_ability pa ON pa.ability_id = a.ability_id
+GROUP BY a.name
+ORDER BY count(*) desc
+LIMIT 10;
+
+-- TOP 10 heavisest pokemon
+SELECT name, ROUND(weight,2)
+FROM dim_pokemon
+ORDER BY ROUND(weight,2) desc
+LIMIT 10;
