@@ -85,6 +85,48 @@ def load_dim_ability(cursor, ability_record):
         ability_record["name"]
     ))
 
+
+def load_fact_pokemon_type(cursor, type_link):
+
+    cursor.execute("""
+        INSERT INTO fact_pokemon_type (
+            pokemon_id,
+            type_id,
+            slot
+        )
+        VALUES (%s, %s, %s)
+
+        ON CONFLICT (pokemon_id, type_id) DO UPDATE SET
+            slot = EXCLUDED.slot;
+    """, (
+        type_link["pokemon_id"],
+        type_link["type_id"],
+        type_link["slot"]
+    ))
+
+
+def load_fact_pokemon_ability(cursor, ability_link):
+
+    cursor.execute("""
+        INSERT INTO fact_pokemon_ability (
+            pokemon_id,
+            ability_id,
+            is_hidden,
+            slot
+        )
+        VALUES (%s, %s, %s, %s)
+
+        ON CONFLICT (pokemon_id, ability_id) DO UPDATE SET
+            is_hidden = EXCLUDED.is_hidden,
+            slot = EXCLUDED.slot;
+    """, (
+        ability_link["pokemon_id"],
+        ability_link["ability_id"],
+        ability_link["is_hidden"],
+        ability_link["slot"]
+    ))
+
+
 # =========================
 # GET RAW DATA
 # =========================
@@ -124,6 +166,15 @@ for row in rows:
 
         load_dim_ability(cursor, ability_record)
 
+    # Load fact_type
+    for type_link in transformed["fact_pokemon_type"]:
+
+        load_fact_pokemon_type(cursor, type_link)
+        
+    # Load fact_ability
+    for ability_link in transformed["fact_pokemon_ability"]:
+
+        load_fact_pokemon_ability(cursor, ability_link)
 
 # =========================
 # SAVE + CLOSE
