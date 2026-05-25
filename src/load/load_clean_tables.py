@@ -4,8 +4,10 @@ from dotenv import load_dotenv
 
 from src.transform.transform_pokemon import transform_pokemon
 
+# Load environment variables
 load_dotenv()
 
+# Database connection
 conn = psycopg2.connect(
     host=os.getenv("POSTGRES_HOST"),
     port=os.getenv("POSTGRES_PORT"),
@@ -16,20 +18,12 @@ conn = psycopg2.connect(
 
 cursor = conn.cursor()
 
-cursor.execute("""
-    SELECT response_json
-    FROM raw_api_responses
-    WHERE endpoint = 'pokemon'
-    ORDER BY resource_id;
-""")
 
-rows = cursor.fetchall()
+# =========================
+# LOAD FUNCTIONS
+# =========================
 
-for row in rows:
-    data = row[0]
-    transformed = transform_pokemon(data)
-
-    pokemon = transformed["dim_pokemon"]
+def load_dim_pokemon(cursor, pokemon):
 
     cursor.execute("""
         INSERT INTO dim_pokemon (
@@ -41,6 +35,7 @@ for row in rows:
             is_default
         )
         VALUES (%s, %s, %s, %s, %s, %s)
+
         ON CONFLICT (pokemon_id) DO UPDATE SET
             name = EXCLUDED.name,
             height = EXCLUDED.height,
@@ -56,8 +51,67 @@ for row in rows:
         pokemon["is_default"]
     ))
 
+
+def load_dim_type(cursor, type_record):
+
+    cursor.execute("""
+        INSERT INTO dim_type (
+            type_id,
+            name
+        )
+        VALUES (%s, %s)
+
+        ON CONFLICT (type_id) DO UPDATE SET
+            name = EXCLUDED.name;
+    """, (
+        type_record["type_id"],
+        type_record["name"]
+    ))
+
+
+# =========================
+# GET RAW DATA
+# =========================
+
+cursor.execute("""
+    SELECT response_json
+    FROM raw_api_responses
+    WHERE endpoint = 'pokemon'
+    ORDER BY resource_id;
+""")
+
+rows = cursor.fetchall()
+
+
+# =========================
+# MAIN LOOP
+# =========================
+
+for row in rows:
+
+    data = row[0]
+
+    transformed = transform_pokemon(data)
+
+    # Load Pokemon dimension
+    pokemon = transformed["dim_pokemon"]
+
+    load_dim_pokemon(cursor, pokemon)
+
+    # Load Type dimension
+    for type_record in transformed["dim_type"]:
+
+        load_dim_type(cursor, type_record)
+
+
+# =========================
+# SAVE + CLOSE
+# =========================
+
 conn.commit()
+
 cursor.close()
+
 conn.close()
 
-print("dim_pokemon loaded successfully.")
+print("Clean tables loaded successfully.")
