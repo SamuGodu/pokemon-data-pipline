@@ -1,10 +1,10 @@
 # Pokémon Data Engineering Pipeline
-
-## Overview
-
 This project is an end-to-end ETL pipeline built using Python, PostgreSQL, Docker, and the PokeAPI.
 
 The pipeline extracts Pokémon data from a public REST API, stores raw JSON responses, transforms nested API data into normalized relational tables, and loads the cleaned data into PostgreSQL for analytical querying.
+
+
+## Overview
 
 The objective of this project is to demonstrate practical Data Engineering fundamentals including:
 
